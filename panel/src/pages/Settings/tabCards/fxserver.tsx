@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import SwitchText from '@/components/SwitchText'
 import InlineCode from '@/components/InlineCode'
-import { AdvancedDivider, SettingItem, SettingItemDesc } from '../settingsItems'
+import { AdvancedDivider, SettingItem, SettingItemDesc, StartupDivider } from '../settingsItems'
 import { useState, useEffect, useRef, useMemo, useReducer } from "react"
 import { getConfigEmptyState, getConfigAccessors, SettingsCardProps, getPageConfig, configsReducer, getConfigDiff, type PageConfigReducerAction } from "../utils"
 import { PlusIcon, TrashIcon, Undo2Icon, XIcon } from "lucide-react"
@@ -185,6 +185,7 @@ export const pageConfigs = {
     dataPath: getPageConfig('server', 'dataPath'),
     restarterSchedule: getPageConfig('restarter', 'schedule'),
     quietMode: getPageConfig('server', 'quiet'),
+    preStartCmd: getPageConfig('server', 'preStartCmd'),
 
     cfgPath: getPageConfig('server', 'cfgPath', true),
     startupArgs: getPageConfig('server', 'startupArgs', true),
@@ -221,6 +222,7 @@ export default function ConfigCardFxserver({ cardCtx, pageCtx }: SettingsCardPro
     const dataPathRef = useRef<HTMLInputElement | null>(null);
     const cfgPathRef = useRef<HTMLInputElement | null>(null);
     const startupArgsRef = useRef<HTMLInputElement | null>(null);
+    const preStartCmdRef = useRef<HTMLInputElement | null>(null);
     const forceQuietMode = pageCtx.apiData?.forceQuietMode;
 
     //Marshalling Utils
@@ -251,10 +253,17 @@ export default function ConfigCardFxserver({ cardCtx, pageCtx }: SettingsCardPro
                 currDataPath = currDataPath.slice(0, -1);
             }
         }
+
+        let currPreStartCmd;
+        if (preStartCmdRef.current) {
+            currPreStartCmd = preStartCmdRef.current.value;
+        }
+
         const overwrites = {
             dataPath: emptyToNull(dataPathRef.current?.value),
             cfgPath: cfgPathRef.current?.value,
             startupArgs: currStartupArgs,
+            preStartCmd: currPreStartCmd,
         };
 
         const res = getConfigDiff(cfg, states, overwrites, showAdvanced);
@@ -389,14 +398,15 @@ export default function ConfigCardFxserver({ cardCtx, pageCtx }: SettingsCardPro
                     <strong>Note:</strong> Make sure your schedule matches your server time and not your local time.
                 </SettingItemDesc>
             </SettingItem>
-            <SettingItem label="Quiet Mode">
+            <SettingItem label="Quiet Mode" locked>
                 <SwitchText
                     id={cfg.quietMode.eid}
                     checkedLabel="Enabled"
                     uncheckedLabel="Disabled"
                     checked={forceQuietMode || states.quietMode}
                     onCheckedChange={cfg.quietMode.state.set}
-                    disabled={pageCtx.isReadOnly || forceQuietMode}
+                    // disabled={pageCtx.isReadOnly || forceQuietMode}
+                    disabled={true}
                 />
                 <SettingItemDesc>
                     Do not print FXServer's output to the terminal. <br />
@@ -407,6 +417,24 @@ export default function ConfigCardFxserver({ cardCtx, pageCtx }: SettingsCardPro
                     </>)}
                 </SettingItemDesc>
             </SettingItem>
+
+            <StartupDivider />
+
+            <SettingItem label="Pre-Start Command" htmlFor={cfg.preStartCmd.eid} customAddon>
+                <Input
+                    id={cfg.preStartCmd.eid}
+                    ref={preStartCmdRef}
+                    defaultValue={cfg.preStartCmd.initialValue}
+                    onInput={updatePageState}
+                    placeholder=".\fivem-pre-start.exe --verbose"
+                    disabled={pageCtx.isReadOnly}
+                />
+                <SettingItemDesc>
+                    This is where you can specify a command to be run before the FXServer executable is started.
+                </SettingItemDesc>
+            </SettingItem>
+
+            
 
             {showAdvanced && <AdvancedDivider />}
 
@@ -439,11 +467,12 @@ export default function ConfigCardFxserver({ cardCtx, pageCtx }: SettingsCardPro
                     <strong>Warning:</strong> You almost certainly should not use this option, commands and convars should be placed in your <InlineCode>server.cfg</InlineCode> instead.
                 </SettingItemDesc>
             </SettingItem>
-            <SettingItem label="OneSync" htmlFor={cfg.onesync.eid} showIf={showAdvanced}>
+            <SettingItem label="OneSync" htmlFor={cfg.onesync.eid} showIf={showAdvanced} locked>
                 <Select
                     value={states.onesync}
                     onValueChange={cfg.onesync.state.set as any}
-                    disabled={pageCtx.isReadOnly}
+                    // disabled={pageCtx.isReadOnly}
+                    disabled={true}
                 >
                     <SelectTrigger id={cfg.onesync.eid}>
                         <SelectValue placeholder="Select OneSync option" />

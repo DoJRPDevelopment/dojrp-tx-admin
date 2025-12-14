@@ -1,5 +1,7 @@
 import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { TooltipTrigger } from "@radix-ui/react-tooltip";
 
 
 function LabelRequired() {
@@ -17,6 +19,38 @@ function LabelNew() {
         <span className='rounded-sm bg-accent text-accent-foreground text-2xs tracking-wider font-semibold leading-snug pb-0.5 px-0.5 w-fit mt-0.5'>
             NEW
         </span>
+    )
+}
+
+function LabelLocked() {
+    return (
+        <Tooltip>
+            <TooltipTrigger style={{
+                alignItems: "start",
+                display: "flex",
+            }}>
+                <span className="tracking-widest text-2xs text-info-inline opacity-65 group-hover/cfgCardItem:opacity-100">LOCKED</span>
+            </TooltipTrigger>
+            <TooltipContent>
+                <p>This setting is locked from editing.<br />This is something added custom for the DoJRP implementation of TXAdmin.</p>
+            </TooltipContent>
+        </Tooltip>
+    )
+}
+
+function LabelCustomAddon() {
+    return (
+        <Tooltip>
+            <TooltipTrigger style={{
+                alignItems: "start",
+                display: "flex",
+            }}>
+                <span className="tracking-widest text-2xs text-success-inline opacity-65 group-hover/cfgCardItem:opacity-100">CUSTOM ADDON</span>
+            </TooltipTrigger>
+            <TooltipContent>
+                <p>This setting is a custom DoJRP addon setting.<br />This is something added custom for the DoJRP implementation of TXAdmin.</p>
+            </TooltipContent>
+        </Tooltip>
     )
 }
 
@@ -45,6 +79,8 @@ export function SettingItem({
     label,
     htmlFor,
     required: isRequired,
+    locked,
+    customAddon,
     showOptional,
     showNew,
     showIf,
@@ -58,6 +94,8 @@ export function SettingItem({
                     {label}
                     {showNew && <LabelNew />}
                     {isRequired && <LabelRequired />}
+                    {locked && <LabelLocked />}
+                    {customAddon && <LabelCustomAddon />}
                     {showOptional && <LabelOptional />}
                 </Label>
             </div>
@@ -72,6 +110,8 @@ type SettingItemProps = {
     label: string;
     htmlFor?: string;
     required?: boolean;
+    locked?: boolean;
+    customAddon?: boolean;
     showOptional?: boolean;
     showNew?: boolean;
     showIf?: boolean;
@@ -91,6 +131,25 @@ export function AdvancedDivider() {
             <div className="relative flex justify-center tracking-wider text-xs">
                 <span className="bg-background px-2 text-muted-foreground/75">
                     Advanced Options
+                </span>
+            </div>
+        </div>
+    )
+}
+
+
+/**
+ * A divider for startup options.
+ */
+export function StartupDivider() {
+    return (
+        <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+                <hr className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center tracking-wider text-xs">
+                <span className="bg-background px-2 text-muted-foreground/75">
+                    Startup Options
                 </span>
             </div>
         </div>

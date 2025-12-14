@@ -132,6 +132,22 @@ type FxSpawnVariables = OsSpawnVars & {
 }
 
 
+export const getPreStartSpawnVariables = (): PreStartSpawnVariables | null => {
+    if (txConfig.server.preStartCmd === null) return null;
+
+    const parts = txConfig.server.preStartCmd.split(" ");
+    if (parts.length === 0) return null;
+
+    return {
+        bin: parts.slice(0, 1)[0],
+        args: parts.slice(1)
+    }
+}
+
+type PreStartSpawnVariables = OsSpawnVars
+
+
+
 /**
  * Print debug information about the spawn variables
  */

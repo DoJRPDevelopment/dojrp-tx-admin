@@ -29,8 +29,8 @@ import { PageHeader, PageHeaderChangelog } from "@/components/page-header";
 const settingsTabsBase = [
     { name: 'General', Component: ConfigCardGeneral }, //TODO: cards [Server Listing, txAdmin]
     { name: 'FXServer', Component: ConfigCardFxserver },
-    { name: 'Bans', Component: ConfigCardBans },
-    { name: 'Whitelist', Component: ConfigCardWhitelist },
+    { name: 'Bans', Component: ConfigCardBans, locked: true },
+    { name: 'Whitelist', Component: ConfigCardWhitelist, locked: true },
     { name: 'Discord', Component: ConfigCardDiscord },
     {
         name: 'Game',
@@ -49,10 +49,12 @@ const settingsTabsBase = [
 type SettingGroup = {
     ctx: SettingsTabInfo & SettingsCardInfo;
     Component: React.FC<SettingsCardProps>;
+    locked: boolean;
 };
 type SettingTabMulti = {
     ctx: SettingsTabInfo;
-    cards: SettingGroup[];
+    cards: Omit<SettingGroup, "locked">[];
+    locked: boolean;
 };
 type SettingTabSingle = SettingGroup;
 export type SettingTabsDatum = SettingTabMulti | SettingTabSingle;
@@ -65,6 +67,7 @@ export const settingsTabs: SettingTabsDatum[] = settingsTabsBase.map((tab) => {
         tabId: nameToId(tab.name),
         tabName: tab.name,
     } satisfies SettingsTabInfo;
+
     if ('cards' in tab && tab.cards) {
         return {
             ctx: tabCtx,
@@ -76,8 +79,10 @@ export const settingsTabs: SettingTabsDatum[] = settingsTabsBase.map((tab) => {
                     cardTitle: `${tabCtx.tabName} ${card.name}`,
                 },
                 Component: card.Component,
-            } satisfies SettingGroup)),
+            } satisfies SettingTabMulti["cards"][number])),
+            locked: tab.locked ?? false,
         } satisfies SettingTabMulti;
+
     } else {
         return {
             ctx: {
@@ -87,6 +92,7 @@ export const settingsTabs: SettingTabsDatum[] = settingsTabsBase.map((tab) => {
                 cardTitle: tabCtx.tabName,
             },
             Component: tab.Component,
+            locked: tab.locked ?? false,
         } satisfies SettingTabSingle;
     }
 });
@@ -178,6 +184,7 @@ export default function SettingsPage() {
 
     //If switching tabs with unsaved changes, ask for confirmation
     const handleTabChange = (newTab: string) => {
+        if (newTab === "null") return;
         if (cardPendingSave && newTab && newTab !== cardPendingSave?.tabId) {
             openConfirmDialog({
                 title: 'Discard Changes',
@@ -216,8 +223,9 @@ export default function SettingsPage() {
                         {settingsTabs.map((tab) => (
                             <TabsTrigger
                                 key={tab.ctx.tabId}
-                                value={tab.ctx.tabId}
+                                value={tab.locked === true ? "null" : tab.ctx.tabId}
                                 className="hover:text-primary"
+                                disabled={tab.locked}
                             >
                                 {tab.ctx.tabName}
                                 {/* <TriangleAlertIcon className="inline-block size-4 mt-0.5 ml-1 text-destructive self-center" /> */}
