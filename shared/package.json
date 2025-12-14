@@ -12,5 +12,6 @@
     "author": "André Tabarra",
     "license": "MIT",
     "dependencies": {},
-    "devDependencies": {}
+    "devDependencies": {},
+    "type": "module"
 }
