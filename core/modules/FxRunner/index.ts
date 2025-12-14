@@ -8,7 +8,7 @@ import { resolveCFGFilePath, validateFixServerConfig } from '@lib/fxserver/fxsCo
 import { msToShortishDuration } from '@lib/misc';
 import { SYM_SYSTEM_AUTHOR } from '@lib/symbols';
 import { UpdateConfigKeySet } from '@modules/ConfigStore/utils';
-import { childProcessEventBlackHole, getFxSpawnVariables, getMutableConvars, isValidChildProcess, mutableConvarConfigDependencies, setupCustomLocaleFile, stringifyConsoleArgs } from './utils';
+import { childProcessEventBlackHole, getFxSpawnVariables, getMutableConvars, getPreStartSpawnVariables, isValidChildProcess, mutableConvarConfigDependencies, setupCustomLocaleFile, stringifyConsoleArgs } from './utils';
 import ProcessManager, { ChildProcessStateInfo } from './ProcessManager';
 import handleFd3Messages from './handleFd3Messages';
 import ConsoleLineEnum from '@modules/Logger/FXServerLogger/ConsoleLineEnum';
@@ -31,6 +31,7 @@ export default class FxRunner {
 
     public readonly history: ChildProcessStateInfo[] = [];
     private proc: ProcessManager | null = null;
+    private preStartProc: ProcessManager | null = null;
     private isAwaitingShutdownNoticeDelay = false;
     private isAwaitingRestartSpawnDelay = false;
     private restartSpawnBackoffDelay = 0;
@@ -194,6 +195,56 @@ export default class FxRunner {
                     key: 'server_actions.spawning_discord',
                     data: { servername: fxSpawnVars.serverName },
                 },
+            });
+        }
+
+
+        // Run the pre-start flow
+        const preStartSpawnVars = getPreStartSpawnVariables();
+        if (preStartSpawnVars !== null) {
+            await new Promise<void>((resolve, reject) => {
+                txCore.logger.fxserver.logSystemCommand(
+                    `Starting pre-start command execution:\n`
+                    + `> ${preStartSpawnVars.bin} ${preStartSpawnVars.args.join(" ")}`
+                );
+
+                const preStartChildProc = spawn(
+                    preStartSpawnVars.bin,
+                    preStartSpawnVars.args,
+                    { stdio: ['pipe', 'pipe', 'pipe'] },
+                );
+
+                preStartChildProc.stdout.setEncoding('utf8');
+                preStartChildProc.stdout.on('data',
+                    txCore.logger.fxserver.writeFxsOutput.bind(
+                        txCore.logger.fxserver,
+                        ConsoleLineEnum.StdOut,
+                    ),
+                );
+                preStartChildProc.stderr.on('data',
+                    txCore.logger.fxserver.writeFxsOutput.bind(
+                        txCore.logger.fxserver,
+                        ConsoleLineEnum.StdErr,
+                    ),
+                );
+
+                preStartChildProc.on("exit", (code, sig) => {
+                    if (code === 0) {
+                        txCore.logger.fxserver.logInformational(
+                            `Finished executing pre-start commands successfully. `
+                            + `Process exited with status code ${code} and signal ${sig}`
+                        );
+                        resolve();
+                    } else {
+                        txCore.logger.fxserver.logInformational(
+                            `Failed to execute pre-start commands.`
+                            + `Process exited with status code ${code} and signal ${sig}`
+                        );
+                        reject();
+                    }
+                })
+
+                // this.preStartProc.onExit(resolve);
             });
         }
 
