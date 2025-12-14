@@ -31,6 +31,7 @@ type HeaderMenuLinkProps = {
     children: React.ReactNode;
     className?: string;
     disabled?: boolean;
+    locked?: boolean;
 };
 function HeaderMenuLink(props: HeaderMenuLinkProps) {
     const [isActive] = useRoute(props.href);
@@ -52,7 +53,19 @@ function HeaderMenuLink(props: HeaderMenuLinkProps) {
                         to access this page.
                     </TooltipContent>
                 </Tooltip>
-            ) : (
+            ) : props.locked ? (
+                <button className="cursor-not-allowed">
+                    <a
+                        className={cn(
+                            buttonVariants({ variant: 'default' }),
+                            "pointer-events-none opacity-50",
+                            props.className,
+                        )}
+                    >
+                        {props.children}
+                    </a>
+                </button>
+            ): (
                 <MainPageLink
                     href={props.href}
                     isActive={isActive}
@@ -71,7 +84,7 @@ function HeaderMenuLink(props: HeaderMenuLinkProps) {
 function HeaderMenuItem(props: HeaderMenuLinkProps) {
     return (
         <NavigationMenuItem>
-            <HeaderMenuLink href={props.href} disabled={props.disabled} className={props.className}>
+            <HeaderMenuLink href={props.href} disabled={props.disabled} className={props.className} locked={props.locked}>
                 {props.children}
             </HeaderMenuLink>
         </NavigationMenuItem>
@@ -100,7 +113,7 @@ export default function DesktopNavbar() {
                     <HeaderMenuItem href="/insights/player-drops">
                         Player Drops
                     </HeaderMenuItem>
-                    <HeaderMenuItem href="/whitelist">
+                    <HeaderMenuItem href="/whitelist" locked>
                         Whitelist
                     </HeaderMenuItem>
                     <HeaderMenuItem href="/admins" disabled={!hasPerm('manage.admins')}>
