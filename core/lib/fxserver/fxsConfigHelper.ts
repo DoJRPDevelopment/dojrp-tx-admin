@@ -1,9 +1,9 @@
+import { txHostConfig } from '@core/globalData';
+import consoleFactory from '@lib/console';
+import isLocalhost from 'is-localhost-ip';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
-import isLocalhost from 'is-localhost-ip';
-import { txHostConfig } from '@core/globalData';
-import consoleFactory from '@lib/console';
 const console = consoleFactory();
 
 
@@ -354,7 +354,11 @@ type EndpointsObjectType = Record<string, { tcp?: true; udp?: true; }>
 /**
  * Validates a list of parsed commands to return endpoints, errors, warnings and lines to comment out
  */
-const validateCommands = async (parsedCommands: (ExecRecursionError | Command)[]) => {
+const validateCommands = async (
+    parsedCommands: (ExecRecursionError | Command)[],
+    options?: { skipEndpointChecks?: boolean }
+) => {
+    const { skipEndpointChecks = false } = options ?? {};
     const checkedInterfaces = new Map();
     let detectedGameName: string | undefined;
     const requiredGameName = txHostConfig.forceGameName
@@ -471,14 +475,27 @@ const validateCommands = async (parsedCommands: (ExecRecursionError | Command)[]
             const endpointsRegex = /^\[?(([0-9.]{7,15})|([a-z0-9:]{2,29}))\]?:(\d{1,5})$/gi;
             const matches = [...cmd.args[0].matchAll(endpointsRegex)];
             if (!Array.isArray(matches) || !matches.length) {
-                errors.add(
-                    cmd.file,
-                    cmd.line,
-                    `the \`${cmd.args[0]}\` is not in a valid \`ip:port\` format.`
-                );
+                if (!skipEndpointChecks) {
+                    errors.add(
+                        cmd.file,
+                        cmd.line,
+                        `the \`${cmd.args[0]}\` is not in a valid \`ip:port\` format.`
+                    );
+                }
                 continue;
             }
             const [_matchedString, iface, ipv4, ipv6, portString] = matches[0];
+
+            if (skipEndpointChecks) {
+                const port = parseInt(portString);
+                const endpoint = (ipv4) ? `${ipv4}:${port}` : `[${ipv6}]:${port}`;
+                const protocol = (cmd.command === 'endpoint_add_tcp') ? 'tcp' : 'udp';
+                if (typeof endpoints[endpoint] === 'undefined') {
+                    endpoints[endpoint] = {};
+                }
+                endpoints[endpoint][protocol] = true;
+                continue;
+            }
 
             //Checking if that interface is available to binding
             let canBind = checkedInterfaces.get(iface);
@@ -611,6 +628,7 @@ export const validateFixServerConfig = async (cfgPath: string, serverDataPath: s
     //Parsing FXServer config & going through each command
     const cfgAbsolutePath = resolveCFGFilePath(cfgPath, serverDataPath);
     const parsedCommands = await parseRecursiveConfig(null, cfgAbsolutePath, serverDataPath);
+    const skipEndpointChecks = true;
     const {
         endpoints,
         hasEndpointCommand,
@@ -618,14 +636,19 @@ export const validateFixServerConfig = async (cfgPath: string, serverDataPath: s
         errors,
         warnings,
         toCommentOut
-    } = await validateCommands(parsedCommands);
+    } = await validateCommands(parsedCommands, { skipEndpointChecks });
 
     //Validating if a valid endpoint was detected
     let connectEndpoint: string | null = null;
     try {
         connectEndpoint = getConnectEndpoint(endpoints, hasEndpointCommand);
     } catch (error) {
-        errors.add(cfgAbsolutePath, false, (error as Error).message);
+        if (!skipEndpointChecks) {
+            errors.add(cfgAbsolutePath, false, (error as Error).message);
+        } else {
+            const fallbackPort = txHostConfig.fxsPort ?? 30120;
+            connectEndpoint = `127.0.0.1:${fallbackPort}`;
+        }
     }
 
     //Commenting out lines or registering them as warnings
