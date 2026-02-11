@@ -14,6 +14,7 @@ export enum ApiTimeout {
     LONG = 15_000,
     REALLY_LONG = 30_000,
     REALLY_REALLY_LONG = 45_000,
+    PRE_START_LONG = 20 * 60 * 1000,
 }
 
 export class BackendApiError extends Error {
