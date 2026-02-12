@@ -28,7 +28,8 @@ const consumePrintToken = () => {
 
 
 //Consts
-const timeoutLimit = 47 * 1000; //REQ_TIMEOUT_REALLY_REALLY_LONG is 45s
+// const timeoutLimit = 47 * 1000; //REQ_TIMEOUT_REALLY_REALLY_LONG is 45s
+const timeoutLimit = 22 * 60 * 1000; // REQ_TIMEOUT_PRE_START_LONG is 20mins
 
 /**
  * Middleware responsible for timeout/error/no-output/413

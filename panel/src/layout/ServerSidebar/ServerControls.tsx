@@ -63,15 +63,15 @@ export default function ServerControls() {
                 data: { action },
                 toastLoadingMessage,
                 
-                // Setting this to 10 minutes for restarts and startups since
+                // Setting this to 20 minutes for restarts and startups since
                 // the pre-start scripts can be a bit long especially when used
                 // to copy files
                 timeout: action === "stop"
                     ? ApiTimeout.LONG
-                    : 10 * 60 * 1000,
-                // timeout: ApiTimeout.LONG,
+                    : ApiTimeout.PRE_START_LONG,
             });
         }
+
         if (action === 'start') {
             callApi();
         } else {
