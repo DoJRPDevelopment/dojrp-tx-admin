@@ -186,6 +186,7 @@ export const pageConfigs = {
     restarterSchedule: getPageConfig('restarter', 'schedule'),
     quietMode: getPageConfig('server', 'quiet'),
     preStartCmd: getPageConfig('server', 'preStartCmd'),
+    serverLogOutputDir: getPageConfig('server', 'serverLogOutputDir'),
 
     cfgPath: getPageConfig('server', 'cfgPath', true),
     startupArgs: getPageConfig('server', 'startupArgs', true),
@@ -223,6 +224,7 @@ export default function ConfigCardFxserver({ cardCtx, pageCtx }: SettingsCardPro
     const cfgPathRef = useRef<HTMLInputElement | null>(null);
     const startupArgsRef = useRef<HTMLInputElement | null>(null);
     const preStartCmdRef = useRef<HTMLInputElement | null>(null);
+    const serverLogOutputDirRef = useRef<HTMLInputElement | null>(null);
     const forceQuietMode = pageCtx.apiData?.forceQuietMode;
 
     //Marshalling Utils
@@ -259,11 +261,17 @@ export default function ConfigCardFxserver({ cardCtx, pageCtx }: SettingsCardPro
             currPreStartCmd = preStartCmdRef.current.value;
         }
 
+        let currServerLogOutputDir;
+        if (serverLogOutputDirRef.current) {
+            currServerLogOutputDir = serverLogOutputDirRef.current.value;
+        }
+
         const overwrites = {
             dataPath: emptyToNull(dataPathRef.current?.value),
             cfgPath: cfgPathRef.current?.value,
             startupArgs: currStartupArgs,
             preStartCmd: currPreStartCmd,
+            serverLogOutputDir: emptyToNull(currServerLogOutputDir),
         };
 
         const res = getConfigDiff(cfg, states, overwrites, showAdvanced);
@@ -415,6 +423,20 @@ export default function ConfigCardFxserver({ cardCtx, pageCtx }: SettingsCardPro
                         <br />
                         <span className="text-warning-inline">{window.txConsts.hostConfigSource}: This setting is locked and cannot be changed.</span>
                     </>)}
+                </SettingItemDesc>
+            </SettingItem>
+
+            <SettingItem label="FXServer Logs Output Directory" htmlFor={cfg.serverLogOutputDir.eid} customAddon>
+                <Input
+                    id={cfg.serverLogOutputDir.eid}
+                    ref={serverLogOutputDirRef}
+                    defaultValue={cfg.serverLogOutputDir.initialValue}
+                    onInput={updatePageState}
+                    placeholder="C:\my-fivem-logs"
+                    disabled={pageCtx.isReadOnly}
+                />
+                <SettingItemDesc>
+                    This is where you can specify the folder which will store the log files from the FiveM console.
                 </SettingItemDesc>
             </SettingItem>
 
