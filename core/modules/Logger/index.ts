@@ -6,6 +6,7 @@ import ServerLogger from './handlers/server';
 import { getLogSizes } from './loggerUtils.js';
 import consoleFactory from '@lib/console';
 import { txEnv } from '@core/globalData';
+import DojrpFXServerLogger from './FXServerLogger/DojrpFXServerLogger';
 const console = consoleFactory(modulename);
 
 
@@ -16,11 +17,13 @@ export default class Logger {
     private readonly basePath = `${txEnv.profilePath}/logs/`;
     public readonly admin: AdminLogger;
     public readonly fxserver: FXServerLogger;
+    // public readonly fxserver: DojrpFXServerLogger;
     public readonly server: ServerLogger;
 
     constructor() {
         this.admin = new AdminLogger(this.basePath, txConfig.logger.admin);
         this.fxserver = new FXServerLogger(this.basePath, txConfig.logger.fxserver);
+        // this.fxserver = new DojrpFXServerLogger(this.basePath);
         this.server = new ServerLogger(this.basePath, txConfig.logger.server);
     }
 

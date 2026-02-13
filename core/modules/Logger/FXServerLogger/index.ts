@@ -7,20 +7,8 @@ import { LoggerBase } from '../LoggerBase.js';
 import ConsoleTransformer from './ConsoleTransformer.js';
 import ConsoleLineEnum from './ConsoleLineEnum.js';
 import { txHostConfig } from '@core/globalData.js';
+import { regexColors, regexControls } from './fxsLoggerUtils.js';
 const console = consoleFactory(modulename);
-
-
-//This regex was done in the first place to prevent fxserver output to be interpreted as txAdmin output by the host terminal
-//IIRC the issue was that one user with a TM on their nick was making txAdmin's console to close or freeze. I couldn't reproduce the issue.
-// \x00-\x08 Control characters in the ASCII table.
-// allow \r and \t
-// \x0B-\x1A Vertical tab and control characters from shift out to substitute.
-// allow \x1B (escape for colors n stuff)
-// \x1C-\x1F Control characters (file separator, group separator, record separator, unit separator).
-// allow all printable
-// \x7F Delete character.
-const regexControls = /[\x00-\x08\x0B-\x1A\x1C-\x1F\x7F]|(?:\x1B\[|\x9B)[\d;]+[@-K]/g;
-const regexColors = /\x1B[^m]*?m/g;
 
 
 export default class FXServerLogger extends LoggerBase {
