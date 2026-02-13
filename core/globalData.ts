@@ -473,7 +473,7 @@ const isPterodactyl = !isWindows && process.env?.TXADMIN_ENABLE === '1';
 const isZapHosting = providerName === 'ZAP-Hosting';
 
 //Quick config to disable ads
-const displayAds = process.env?.TXHOST_TMP_HIDE_ADS !== 'true' || isPterodactyl || isZapHosting;
+const displayAds = false /* process.env?.TXHOST_TMP_HIDE_ADS !== 'true' || isPterodactyl || isZapHosting */;
 const adSchema = z.object({
     img: z.string(),
     url: z.string(),
