@@ -35,6 +35,7 @@ export default class FxRunner {
     private isAwaitingShutdownNoticeDelay = false;
     private isAwaitingRestartSpawnDelay = false;
     private restartSpawnBackoffDelay = 0;
+    private isExecutingPrestart = false;
 
 
     //MARK: SIGNALS
@@ -202,6 +203,7 @@ export default class FxRunner {
         // Run the pre-start flow
         const preStartSpawnVars = getPreStartSpawnVariables();
         if (preStartSpawnVars !== null) {
+            this.isExecutingPrestart = true;
             await new Promise<void>((resolve, reject) => {
                 txCore.logger.fxserver.logSystemCommand(
                     `Starting pre-start command execution:\n`
@@ -246,6 +248,7 @@ export default class FxRunner {
 
                 // this.preStartProc.onExit(resolve);
             });
+            this.isExecutingPrestart = false;
         }
 
         //Starting server
@@ -517,7 +520,7 @@ export default class FxRunner {
      * - FALSE: server started, but might have been killed or crashed.
      */
     public get isIdle() {
-        return !this.proc && !this.isAwaitingRestartSpawnDelay;
+        return !this.proc && !this.isAwaitingRestartSpawnDelay && !this.isExecutingPrestart;
     }
 
 
