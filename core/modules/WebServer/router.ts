@@ -3,7 +3,7 @@ import Router from '@koa/router';
 import KoaRateLimit from 'koa-ratelimit';
 
 import * as routes from '@routes/index';
-import { apiAuthMw, hostAuthMw, intercomAuthMw, webAuthMw } from './middlewares/authMws';
+import { apiAuthMw, apiAuthMwDojrp, hostAuthMw, intercomAuthMw, webAuthMw } from './middlewares/authMws';
 
 
 /**
@@ -116,6 +116,10 @@ export default () => {
 
     //Host routes
     router.get('/host/status', hostAuthMw, routes.host_status);
+
+    // DoJRP Routes
+    router.post('/dojrp/fxserver/controls', apiAuthMwDojrp, routes.fxserver_dojrp_controls);
+
 
     //DevDebug routes - no auth
     if (txDevEnv.ENABLED) {
