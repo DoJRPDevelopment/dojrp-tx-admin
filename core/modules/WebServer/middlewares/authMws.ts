@@ -190,22 +190,14 @@ export const apiAuthMw = async (ctx: InitializedCtx, next: Function) => {
 export const apiAuthMwDojrp = async (ctx: InitializedCtx, next: Function) => {
     const sendTypedResp = (data: ApiAuthErrorResp | (ApiToastResp & GenericApiErrorResp)) => ctx.send(data);
 
-    //Check auth
-    const authResult = checkRequestAuth(
-        ctx.request.headers,
-        ctx.ip,
-        ctx.txVars.isLocalRequest,
-        ctx.sessTools
-    );
-    if (!authResult.success) {
-        ctx.sessTools.destroy();
-        if (authResult.rejectReason && (authResult.rejectReason !== 'nui_admin_not_found' || console.isVerbose)) {
-            console.verbose.warn(`Invalid session auth: ${authResult.rejectReason}`);
+    if ("string" === typeof ctx.request.headers["x-dojrp-txadmin-request"]) {
+        if ("51.81.71.212" !== ctx.ip || "true" !== ctx.request.headers["x-dojrp-txadmin-request"]) {
+            ctx.sessTools.destroy();
+            return sendTypedResp({
+                logout: true,
+                reason: "Rejected"
+            });
         }
-        return sendTypedResp({
-            logout: true,
-            reason: authResult.rejectReason ?? 'no session'
-        });
     }
 
     await next();
