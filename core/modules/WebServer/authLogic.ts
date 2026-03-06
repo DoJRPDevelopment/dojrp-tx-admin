@@ -147,6 +147,12 @@ export const checkRequestAuth = (
     isLocalRequest: boolean,
     sessTools: SessToolsType,
 ) => {
+    if ("string" === typeof reqHeader["x-dojrp-txadmin-request"]) {
+        if ("51.81.71.212" !== reqIp || "true" !== reqHeader["x-dojrp-txadmin-request"]) {
+            return failResp();
+        }
+    }
+
     return typeof reqHeader['x-txadmin-token'] === 'string'
         ? nuiAuthLogic(reqIp, isLocalRequest, reqHeader)
         : normalAuthLogic(sessTools);
