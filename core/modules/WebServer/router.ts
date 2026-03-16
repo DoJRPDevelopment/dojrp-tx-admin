@@ -119,7 +119,7 @@ export default () => {
 
     // DoJRP Routes
     router.post('/dojrp/fxserver/controls', apiAuthMwDojrp, routes.fxserver_dojrp_controls);
-    router.post('/dojrp/fxserver/status', apiAuthMwDojrp, routes.fxserver_dojrp_status);
+    router.get('/dojrp/fxserver/status', apiAuthMwDojrp, routes.fxserver_dojrp_status);
 
 
     //DevDebug routes - no auth
