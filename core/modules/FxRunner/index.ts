@@ -204,51 +204,62 @@ export default class FxRunner {
         const preStartSpawnVars = getPreStartSpawnVariables();
         if (preStartSpawnVars !== null) {
             this.isExecutingPrestart = true;
-            await new Promise<void>((resolve, reject) => {
-                txCore.logger.fxserver.logSystemCommand(
-                    `Starting pre-start command execution:\n`
-                    + `> ${preStartSpawnVars.bin} ${preStartSpawnVars.args.join(" ")}`
-                );
+            try {
+                await new Promise<void>((resolve, reject) => {
+                    txCore.logger.fxserver.logSystemCommand(
+                        `Starting pre-start command execution:\n`
+                        + `> ${preStartSpawnVars.bin} ${preStartSpawnVars.args.join(" ")}`
+                    );
 
-                const preStartChildProc = spawn(
-                    preStartSpawnVars.bin,
-                    preStartSpawnVars.args,
-                    { stdio: ['pipe', 'pipe', 'pipe'] },
-                );
+                    const preStartChildProc = spawn(
+                        preStartSpawnVars.bin,
+                        preStartSpawnVars.args,
+                        { stdio: ['pipe', 'pipe', 'pipe'] },
+                    );
 
-                preStartChildProc.stdout.setEncoding('utf8');
-                preStartChildProc.stdout.on('data',
-                    txCore.logger.fxserver.writeFxsOutput.bind(
-                        txCore.logger.fxserver,
-                        ConsoleLineEnum.StdOut,
-                    ),
-                );
-                preStartChildProc.stderr.on('data',
-                    txCore.logger.fxserver.writeFxsOutput.bind(
-                        txCore.logger.fxserver,
-                        ConsoleLineEnum.StdErr,
-                    ),
-                );
+                    preStartChildProc.stdout.setEncoding('utf8');
+                    preStartChildProc.stdout.on('data',
+                        txCore.logger.fxserver.writeFxsOutput.bind(
+                            txCore.logger.fxserver,
+                            ConsoleLineEnum.StdOut,
+                        ),
+                    );
+                    preStartChildProc.stderr.on('data',
+                        txCore.logger.fxserver.writeFxsOutput.bind(
+                            txCore.logger.fxserver,
+                            ConsoleLineEnum.StdErr,
+                        ),
+                    );
 
-                preStartChildProc.on("exit", (code, sig) => {
-                    if (code === 0) {
-                        txCore.logger.fxserver.logInformational(
-                            `Finished executing pre-start commands successfully. `
-                            + `Process exited with status code ${code} and signal ${sig}`
-                        );
-                        resolve();
-                    } else {
-                        txCore.logger.fxserver.logInformational(
-                            `Failed to execute pre-start commands.`
-                            + `Process exited with status code ${code} and signal ${sig}`
-                        );
-                        reject();
-                    }
-                })
+                    preStartChildProc.on('error', (err) => {
+                        const msg = `Failed to execute pre-start commands. ${(err as any)?.message ?? err}`;
+                        txCore.logger.fxserver.logInformational(msg);
+                        reject(new Error(msg));
+                    });
 
-                // this.preStartProc.onExit(resolve);
-            });
-            this.isExecutingPrestart = false;
+                    preStartChildProc.on("exit", (code, sig) => {
+                        if (code === 0) {
+                            txCore.logger.fxserver.logInformational(
+                                `Finished executing pre-start commands successfully. `
+                                + `Process exited with status code ${code} and signal ${sig}`
+                            );
+                            resolve();
+                        } else {
+                            const msg =
+                                `Failed to execute pre-start commands.`
+                                + `Process exited with status code ${code} and signal ${sig}`;
+                            txCore.logger.fxserver.logInformational(msg);
+                            reject(new Error(msg));
+                        }
+                    })
+                });
+            } catch (error) {
+                const msg = (error as any)?.message ?? 'Failed to execute pre-start commands.';
+                console.error(msg);
+                return msg;
+            } finally {
+                this.isExecutingPrestart = false;
+            }
         }
 
         //Starting server
