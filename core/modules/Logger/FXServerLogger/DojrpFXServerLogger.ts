@@ -9,7 +9,7 @@ import bytes from "bytes";
 import { getLogDivider } from "../loggerUtils";
 
 export default class DojrpFXServerLogger {
-    private static readonly HITCH_WARNING_REPORT_INTERVAL_MS = 60000;
+    private static readonly HITCH_WARNING_REPORT_INTERVAL_MS = 300000;
     private static readonly FILE_BUFFER_FLUSH_INTERVAL_MS = 5000;
     private static readonly RECENT_BUF_MAX_SIZE = 256 * 1024;
     private static readonly RECENT_BUF_TRIM_SLICE_SIZE = 32 * 1024;
