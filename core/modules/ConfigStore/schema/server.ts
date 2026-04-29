@@ -73,6 +73,13 @@ const serverLogOutputDir = typeNullableConfig({
     fixer: SYM_FIXER_DEFAULT,
 });
 
+const serverLogOutputDir2 = typeNullableConfig({
+    name: 'FXServer Log Output Directory 2',
+    default: null,
+    validator: z.string().min(1).nullable(),
+    fixer: SYM_FIXER_DEFAULT,
+});
+
 
 export default {
     dataPath,
@@ -85,4 +92,5 @@ export default {
     restartSpawnDelayMs,
     preStartCmd,
     serverLogOutputDir,
+    serverLogOutputDir2,
 } as const;
