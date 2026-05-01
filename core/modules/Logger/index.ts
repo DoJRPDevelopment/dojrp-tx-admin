@@ -15,6 +15,7 @@ const console = consoleFactory(modulename);
  */
 export default class Logger {
     private readonly basePath = `${txEnv.profilePath}/logs/`;
+    private readonly basePath2 = `${txEnv.profilePath}/logs2/`;
     public readonly admin: AdminLogger;
     // public readonly fxserver: FXServerLogger;
     public readonly fxserver: DojrpFXServerLogger;
@@ -23,7 +24,10 @@ export default class Logger {
     constructor() {
         this.admin = new AdminLogger(this.basePath, txConfig.logger.admin);
         // this.fxserver = new FXServerLogger(this.basePath, txConfig.logger.fxserver);
-        this.fxserver = new DojrpFXServerLogger(txConfig.server.serverLogOutputDir || this.basePath);
+        this.fxserver = new DojrpFXServerLogger(
+            txConfig.server.serverLogOutputDir || this.basePath,
+            txConfig.server.serverLogOutputDir2 || this.basePath2
+        );
         this.server = new ServerLogger(this.basePath, txConfig.logger.server);
     }
 

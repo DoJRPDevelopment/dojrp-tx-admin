@@ -187,6 +187,7 @@ export const pageConfigs = {
     quietMode: getPageConfig('server', 'quiet'),
     preStartCmd: getPageConfig('server', 'preStartCmd'),
     serverLogOutputDir: getPageConfig('server', 'serverLogOutputDir'),
+    serverLogOutputDir2: getPageConfig('server', 'serverLogOutputDir2'),
 
     cfgPath: getPageConfig('server', 'cfgPath', true),
     startupArgs: getPageConfig('server', 'startupArgs', true),
@@ -225,6 +226,7 @@ export default function ConfigCardFxserver({ cardCtx, pageCtx }: SettingsCardPro
     const startupArgsRef = useRef<HTMLInputElement | null>(null);
     const preStartCmdRef = useRef<HTMLInputElement | null>(null);
     const serverLogOutputDirRef = useRef<HTMLInputElement | null>(null);
+    const serverLogOutputDir2Ref = useRef<HTMLInputElement | null>(null);
     const forceQuietMode = pageCtx.apiData?.forceQuietMode;
 
     //Marshalling Utils
@@ -266,12 +268,18 @@ export default function ConfigCardFxserver({ cardCtx, pageCtx }: SettingsCardPro
             currServerLogOutputDir = serverLogOutputDirRef.current.value;
         }
 
+        let currServerLogOutputDir2;
+        if (serverLogOutputDir2Ref.current) {
+            currServerLogOutputDir2 = serverLogOutputDir2Ref.current.value;
+        }
+
         const overwrites = {
             dataPath: emptyToNull(dataPathRef.current?.value),
             cfgPath: cfgPathRef.current?.value,
             startupArgs: currStartupArgs,
             preStartCmd: currPreStartCmd,
             serverLogOutputDir: emptyToNull(currServerLogOutputDir),
+            serverLogOutputDir2: emptyToNull(currServerLogOutputDir2),
         };
 
         const res = getConfigDiff(cfg, states, overwrites, showAdvanced);
@@ -431,6 +439,20 @@ export default function ConfigCardFxserver({ cardCtx, pageCtx }: SettingsCardPro
                     id={cfg.serverLogOutputDir.eid}
                     ref={serverLogOutputDirRef}
                     defaultValue={cfg.serverLogOutputDir.initialValue}
+                    onInput={updatePageState}
+                    placeholder="C:\my-fivem-logs"
+                    disabled={pageCtx.isReadOnly}
+                />
+                <SettingItemDesc>
+                    This is where you can specify the folder which will store the log files from the FiveM console.
+                </SettingItemDesc>
+            </SettingItem>
+
+            <SettingItem label="FXServer Logs Output Directory 2" htmlFor={cfg.serverLogOutputDir2.eid} customAddon>
+                <Input
+                    id={cfg.serverLogOutputDir2.eid}
+                    ref={serverLogOutputDir2Ref}
+                    defaultValue={cfg.serverLogOutputDir2.initialValue}
                     onInput={updatePageState}
                     placeholder="C:\my-fivem-logs"
                     disabled={pageCtx.isReadOnly}

@@ -7,6 +7,32 @@ import { txHostConfig } from "@core/globalData";
 import { processStdioWriteRaw } from "@lib/console";
 import bytes from "bytes";
 import { getLogDivider } from "../loggerUtils";
+import { Writable } from "stream";
+
+class MultiWriteStream extends Writable {
+    private streams: WriteStream[];
+
+    constructor(...streams: WriteStream[]) {
+        super();
+        this.streams = streams;
+    }
+
+    _write(chunk: any, encoding: BufferEncoding, callback: (error?: Error | null) => void): void {
+        let pending = this.streams.length;
+        let error: Error | null = null;
+
+        for (const stream of this.streams) {
+            stream.write(chunk, encoding, (err) => {
+                if (err) error = err;
+                if (--pending === 0) callback(error);
+            });
+        }
+    }
+
+    get path(): WriteStream["path"] {
+        return this.streams[0]?.path;
+    }
+}
 
 export default class DojrpFXServerLogger {
     private static readonly HITCH_WARNING_REPORT_INTERVAL_MS = 300000;
@@ -16,6 +42,7 @@ export default class DojrpFXServerLogger {
 
     private readonly transformer = new ConsoleTransformer();
     private readonly logDirPath: string;
+    private readonly logDirPath2: string;
     private fileStream: WriteStream | null = null;
     private fileBuffer: string = "";
     private recentBuffer = "";
@@ -23,8 +50,9 @@ export default class DojrpFXServerLogger {
     private fxsOutputLineBuilderStdErr = "";
     private suppressedHitchWarnings: number[] = [];
 
-    constructor(logDirPath: string) {
+    constructor(logDirPath: string, logDirPath2: string) {
         this.logDirPath = logDirPath;
+        this.logDirPath2 = logDirPath2;
 
         setInterval(() => {
             this.flushFileBuffer();
@@ -61,8 +89,16 @@ export default class DojrpFXServerLogger {
         return join(this.logDirPath, fileName);
     }
 
-    private openStreamForFile(path: string): WriteStream {
-        return createWriteStream(path, { flags: 'a' });
+    private computeLogFilePath2(): string {
+        const fileName = `${formatDateYYYYMMDD(new Date())}.log`;
+        return join(this.logDirPath2, fileName);
+    }
+
+    private openStreamForFile(path: string, path2: string): WriteStream {
+        const primary = createWriteStream(path, { flags: 'a' });
+        const secondary = createWriteStream(path2, { flags: 'a' });
+
+        return new MultiWriteStream(primary, secondary) as unknown as WriteStream;
     }
 
     private internalFlushBufferToStream(buf: string, stream: WriteStream): void {
@@ -71,6 +107,7 @@ export default class DojrpFXServerLogger {
 
     private currentFileStream(): WriteStream {
         const computedFilePath = this.computeLogFilePath();
+        const computedFilePath2 = this.computeLogFilePath2();
         
         if (this.fileStream?.path == computedFilePath) {
             return this.fileStream;
@@ -78,7 +115,7 @@ export default class DojrpFXServerLogger {
 
         if (null !== this.fileStream) {
             const oldStream = this.fileStream;
-            this.fileStream = this.openStreamForFile(computedFilePath);
+            this.fileStream = this.openStreamForFile(computedFilePath, computedFilePath2);
             
             const bufCopy = this.fileBuffer;
             this.fileBuffer = "";
@@ -88,7 +125,7 @@ export default class DojrpFXServerLogger {
             return this.fileStream;
         }
 
-        this.fileStream = this.openStreamForFile(computedFilePath);
+        this.fileStream = this.openStreamForFile(computedFilePath, computedFilePath2);
         return this.fileStream;
     }
 
