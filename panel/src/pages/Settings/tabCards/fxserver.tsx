@@ -538,6 +538,10 @@ export default function ConfigCardFxserver({ cardCtx, pageCtx }: SettingsCardPro
                         <SelectItem value="180">3 minutes</SelectItem>
                         <SelectItem value="300">5 minutes</SelectItem>
                         <SelectItem value="600">10 minutes</SelectItem>
+                        <SelectItem value="900">15 minutes</SelectItem>
+                        <SelectItem value="1200">20 minutes</SelectItem>
+                        <SelectItem value="1500">25 minutes</SelectItem>
+                        <SelectItem value="1800">30 minutes</SelectItem>
                     </SelectContent>
                 </Select>
                 <SettingItemDesc>
