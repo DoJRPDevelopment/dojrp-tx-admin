@@ -13,5 +13,6 @@
     "license": "MIT",
     "type": "module",
     "dependencies": {},
-    "devDependencies": {}
+    "devDependencies": {},
+    "type": "module"
 }

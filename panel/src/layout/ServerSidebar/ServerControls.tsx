@@ -62,9 +62,16 @@ export default function ServerControls() {
             fxsControlApi({
                 data: { action },
                 toastLoadingMessage,
-                timeout: ApiTimeout.LONG,
+                
+                // Setting this to 20 minutes for restarts and startups since
+                // the pre-start scripts can be a bit long especially when used
+                // to copy files
+                timeout: action === "stop"
+                    ? ApiTimeout.LONG
+                    : ApiTimeout.PRE_START_LONG,
             });
         }
+
         if (action === 'start') {
             callApi();
         } else {

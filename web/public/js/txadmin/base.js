@@ -8,6 +8,7 @@ const REQ_TIMEOUT_MEDIUM = 5_000;
 const REQ_TIMEOUT_LONG = 9_000;
 const REQ_TIMEOUT_REALLY_LONG = 15_000;
 const REQ_TIMEOUT_REALLY_REALLY_LONG = 30_000;
+const REQ_TIMEOUT_PRE_START_LONG = 20 * 60 * 1000;
 const SPINNER_HTML = '<div class="txSpinner">Loading...</div>';
 
 //Helpers

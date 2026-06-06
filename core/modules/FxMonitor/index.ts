@@ -34,7 +34,7 @@ const HB_CONFIG = {
 
     //after first success:
     delayLimit: 10,
-    fatalLimit: 60,
+    fatalLimit: 500,
 };
 const MAX_LOG_ENTRIES = 300; //5 minutes in 1s intervals
 const MIN_WARNING_INTERVAL = 10;
