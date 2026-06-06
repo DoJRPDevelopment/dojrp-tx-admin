@@ -48,27 +48,29 @@ export default function DynamicAdvert({ placement }: DynamicAdvertProps) {
     const imgSize = isLoginPage ? '192x64' : '256x80';
     const linkPrefix = window.txConsts.isWebInterface ? '' : 'nui://monitor/web/public/';
     return (
-        <a
-            href={advert.link}
-            onClick={handleExternalLinkClick}
-            target='_blank'
-            className={cn(
-                'relative self-center group shadow-sm',
-                'brightness-125 opacity-80 hover:opacity-100',
-                'dark:brightness-100 dark:hover:brightness-125',
-                isLoginPage ? 'w-48 h-16' : 'w-sidebar h-[80px]'
-            )}
-        >
-            <div
-                className='absolute inset-0 -z-10 =animate-pulse blur scale-0 group-hover:scale-100 transition-transform bg-black dark:bg-gradient-to-r dark:from-[#18E889] dark:to-[#01FFFF]'
-            />
-            <img
-                className={cn(
-                    'rounded-lg hover:outline outline-2 m-auto hover:saturate-150',
-                    isLoginPage ? 'max-w-48 max-h-16' : 'max-w-sidebar max-h-[80px]'
-                )}
-                src={`${linkPrefix}/img/advert-${advert.name}-${imgSize}.png`}
-            />
-        </a>
+        //disable dynamic adverts
+        <></>
+        // <a
+        //     href={advert.link}
+        //     onClick={handleExternalLinkClick}
+        //     target='_blank'
+        //     className={cn(
+        //         'relative self-center group shadow-sm',
+        //         'brightness-125 opacity-80 hover:opacity-100',
+        //         'dark:brightness-100 dark:hover:brightness-125',
+        //         isLoginPage ? 'w-48 h-16' : 'w-sidebar h-[80px]'
+        //     )}
+        // >
+        //     <div
+        //         className='absolute inset-0 -z-10 =animate-pulse blur scale-0 group-hover:scale-100 transition-transform bg-black dark:bg-gradient-to-r dark:from-[#18E889] dark:to-[#01FFFF]'
+        //     />
+        //     <img
+        //         className={cn(
+        //             'rounded-lg hover:outline outline-2 m-auto hover:saturate-150',
+        //             isLoginPage ? 'max-w-48 max-h-16' : 'max-w-sidebar max-h-[80px]'
+        //         )}
+        //         src={`${linkPrefix}/img/advert-${advert.name}-${imgSize}.png`}
+        //     />
+        // </a>
     );
 }
