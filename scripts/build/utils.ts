@@ -84,7 +84,7 @@ export const getFxsPaths = (fxserverPath: string) => {
  * NOTE: to run locally: `GITHUB_REF="refs/tags/v9.9.9" npm run build`
  */
 export const getPublishVersion = (isOptional: boolean) => {
-    const workflowRef = process.env.GITHUB_REF?.replaceAll("\"", "") ?? "v8.0.1";
+    const workflowRef = process.env.GITHUB_REF?.replaceAll("\"", "") ?? "v8.1.1";
     try {
         if (!workflowRef) {
             if (isOptional) {
