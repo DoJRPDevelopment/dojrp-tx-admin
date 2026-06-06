@@ -22,22 +22,6 @@ function LabelNew() {
     )
 }
 
-/**
- * An optional description line with conditional rendering
- */
-export function SettingItemWarningLine({ visible, children, className }: SettingItemWarningLineProps) {
-    if (!visible) return null;
-    return (
-        <div className={cn("text-warning-inline opacity-45 group-hover/cfgCardItem:opacity-100", className)}>
-            {children}
-        </div>
-    );
-}
-
-type SettingItemWarningLineProps = {
-    visible: boolean;
-    children: React.ReactNode;
-    className?: string;
 function LabelLocked() {
     return (
         <Tooltip>
@@ -68,6 +52,24 @@ function LabelCustomAddon() {
             </TooltipContent>
         </Tooltip>
     )
+}
+
+/**
+ * An optional description line with conditional rendering
+ */
+export function SettingItemWarningLine({ visible, children, className }: SettingItemWarningLineProps) {
+    if (!visible) return null;
+    return (
+        <div className={cn("text-warning-inline opacity-45 group-hover/cfgCardItem:opacity-100", className)}>
+            {children}
+        </div>
+    );
+}
+
+type SettingItemWarningLineProps = {
+    visible: boolean;
+    children: React.ReactNode;
+    className?: string;
 }
 
 
