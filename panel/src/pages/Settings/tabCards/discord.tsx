@@ -1,15 +1,15 @@
-import { Input } from "@/components/ui/input"
-import { Button } from '@/components/ui/button'
-import TxAnchor from '@/components/TxAnchor'
-import { RotateCcwIcon, XIcon } from 'lucide-react'
-import SwitchText from '@/components/SwitchText'
-import InlineCode from '@/components/InlineCode'
-import { SettingItem, SettingItemDesc } from '../settingsItems'
-import { useEffect, useRef, useMemo, useReducer } from "react"
-import { getConfigEmptyState, getConfigAccessors, SettingsCardProps, getPageConfig, configsReducer, getConfigDiff } from "../utils"
-import SettingsCardShell from "../SettingsCardShell"
-import { Textarea } from "@/components/ui/textarea"
-import { txToast } from "@/components/TxToaster"
+import InlineCode from '@/components/InlineCode';
+import SwitchText from '@/components/SwitchText';
+import TxAnchor from '@/components/TxAnchor';
+import { txToast } from "@/components/TxToaster";
+import { Button } from '@/components/ui/button';
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { RotateCcwIcon, XIcon } from 'lucide-react';
+import { useEffect, useMemo, useReducer, useRef } from "react";
+import SettingsCardShell from "../SettingsCardShell";
+import { SettingItem, SettingItemDesc } from '../settingsItems';
+import { configsReducer, getConfigAccessors, getConfigDiff, getConfigEmptyState, getPageConfig, SettingsCardProps } from "../utils";
 
 
 //We are not validating the JSON, only that it is a string
@@ -27,6 +27,8 @@ export const pageConfigs = {
     botToken: getPageConfig('discordBot', 'token'),
     discordGuild: getPageConfig('discordBot', 'guild'),
     warningsChannel: getPageConfig('discordBot', 'warningsChannel'),
+    serverActionWebhook1: getPageConfig('discordBot', 'serverActionWebhook1'),
+    serverActionWebhook2: getPageConfig('discordBot', 'serverActionWebhook2'),
     embedJson: getPageConfig('discordBot', 'embedJson'),
     embedConfigJson: getPageConfig('discordBot', 'embedConfigJson'),
 } as const;
@@ -50,6 +52,8 @@ export default function ConfigCardDiscord({ cardCtx, pageCtx }: SettingsCardProp
     const botTokenRef = useRef<HTMLInputElement | null>(null);
     const discordGuildRef = useRef<HTMLInputElement | null>(null);
     const warningsChannelRef = useRef<HTMLInputElement | null>(null);
+    const serverActionWebhook1Ref = useRef<HTMLInputElement | null>(null);
+    const serverActionWebhook2Ref = useRef<HTMLInputElement | null>(null);
 
     //Marshalling Utils
     const emptyToNull = (str?: string) => {
@@ -64,6 +68,8 @@ export default function ConfigCardDiscord({ cardCtx, pageCtx }: SettingsCardProp
             botToken: emptyToNull(botTokenRef.current?.value),
             discordGuild: emptyToNull(discordGuildRef.current?.value),
             warningsChannel: emptyToNull(warningsChannelRef.current?.value),
+            serverActionWebhook1: emptyToNull(serverActionWebhook1Ref.current?.value),
+            serverActionWebhook2: emptyToNull(serverActionWebhook2Ref.current?.value),
         };
 
         const res = getConfigDiff(cfg, states, overwrites, false);
@@ -157,6 +163,36 @@ export default function ConfigCardDiscord({ cardCtx, pageCtx }: SettingsCardProp
                     The ID of the channel to send Announcements (eg server restarts). <br />
                     You can leave it blank to disable this feature. <br />
                     To get the channel ID, go to Discord's settings and <TxAnchor href="https://support.discordapp.com/hc/article_attachments/115002742731/mceclip0.png">enable developer mode</TxAnchor>, then right-click on the channel name and select "Copy ID".
+                </SettingItemDesc>
+            </SettingItem>
+            <SettingItem label="Server Action Webhook 1" htmlFor={cfg.serverActionWebhook1.eid} showOptional>
+                <Input
+                    id={cfg.serverActionWebhook1.eid}
+                    ref={serverActionWebhook1Ref}
+                    defaultValue={cfg.serverActionWebhook1.initialValue}
+                    onInput={updatePageState}
+                    disabled={pageCtx.isReadOnly}
+                    placeholder='https://discord.com/api/webhooks/...'
+                    autoComplete="off"
+                    className="blur-input"
+                />
+                <SettingItemDesc>
+                    Optional webhook URL for server start, restart, and stop messages. Leave blank to disable.
+                </SettingItemDesc>
+            </SettingItem>
+            <SettingItem label="Server Action Webhook 2" htmlFor={cfg.serverActionWebhook2.eid} showOptional>
+                <Input
+                    id={cfg.serverActionWebhook2.eid}
+                    ref={serverActionWebhook2Ref}
+                    defaultValue={cfg.serverActionWebhook2.initialValue}
+                    onInput={updatePageState}
+                    disabled={pageCtx.isReadOnly}
+                    placeholder='https://discord.com/api/webhooks/...'
+                    autoComplete="off"
+                    className="blur-input"
+                />
+                <SettingItemDesc>
+                    Optional second webhook URL for the same server action messages.
                 </SettingItemDesc>
             </SettingItem>
             {/* <SettingItem label="Status Embed">

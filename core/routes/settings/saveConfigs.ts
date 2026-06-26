@@ -1,23 +1,23 @@
 const modulename = 'WebServer:SettingsPage';
 import consoleFactory from '@lib/console';
+import { getFsErrorMdMessage } from '@lib/fs';
+import { resolveCFGFilePath } from '@lib/fxserver/fxsConfigHelper';
+import { findPotentialServerDataPaths, isValidServerDataPath } from '@lib/fxserver/serverData';
+import { SYM_RESET_CONFIG } from '@lib/symbols';
+import ConfigStore from '@modules/ConfigStore';
+import type { PartialTxConfigs, PartialTxConfigsToSave } from '@modules/ConfigStore/schema';
+import { getSchemaChainError } from '@modules/ConfigStore/schema/utils';
+import { confx } from '@modules/ConfigStore/utils';
+import { generateStatusMessage } from '@modules/DiscordBot/commands/status';
+import Translator, { localeFileSchema } from '@modules/Translator';
+import type { AuthedCtx } from '@modules/WebServer/ctxTypes';
+import type { ApiToastResp } from '@shared/genericApiTypes';
+import type { ConfigChangelogEntry } from '@shared/otherTypes';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import slash from 'slash';
-import type { AuthedCtx } from '@modules/WebServer/ctxTypes';
-import type { ApiToastResp } from '@shared/genericApiTypes';
-import type { PartialTxConfigs, PartialTxConfigsToSave } from '@modules/ConfigStore/schema';
-import type { ConfigChangelogEntry } from '@shared/otherTypes';
 import { z } from 'zod';
 import { fromError } from 'zod-validation-error';
-import Translator, { localeFileSchema } from '@modules/Translator';
-import ConfigStore from '@modules/ConfigStore';
-import { resolveCFGFilePath } from '@lib/fxserver/fxsConfigHelper';
-import { findPotentialServerDataPaths, isValidServerDataPath } from '@lib/fxserver/serverData';
-import { getFsErrorMdMessage } from '@lib/fs';
-import { generateStatusMessage } from '@modules/DiscordBot/commands/status';
-import { getSchemaChainError } from '@modules/ConfigStore/schema/utils';
-import { confx } from '@modules/ConfigStore/utils';
-import { SYM_RESET_CONFIG } from '@lib/symbols';
 const console = consoleFactory(modulename);
 
 
@@ -333,6 +333,8 @@ const handleDiscordCard: CardHandler = async (inputConfig, sendTypedResp) => {
         [schemas.token, inputConfig.discordBot.token],
         [schemas.guild, inputConfig.discordBot.guild],
         [schemas.warningsChannel, inputConfig.discordBot.warningsChannel],
+        [schemas.serverActionWebhook1, inputConfig.discordBot.serverActionWebhook1],
+        [schemas.serverActionWebhook2, inputConfig.discordBot.serverActionWebhook2],
     ]);
     if (validationError) {
         return sendTypedResp({

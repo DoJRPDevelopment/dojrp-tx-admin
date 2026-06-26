@@ -1,19 +1,19 @@
-import { spawn } from 'node:child_process';
-import { setTimeout as sleep } from 'node:timers/promises';
-import StreamValues from 'stream-json/streamers/StreamValues';
-import { customAlphabet } from 'nanoid/non-secure';
-import dict49 from 'nanoid-dictionary/nolookalikes';
+import { txHostConfig } from '@core/globalData';
 import consoleFactory from '@lib/console';
 import { resolveCFGFilePath, validateFixServerConfig } from '@lib/fxserver/fxsConfigHelper';
 import { msToShortishDuration } from '@lib/misc';
 import { SYM_SYSTEM_AUTHOR } from '@lib/symbols';
 import { UpdateConfigKeySet } from '@modules/ConfigStore/utils';
-import { childProcessEventBlackHole, getFxSpawnVariables, getMutableConvars, getPreStartSpawnVariables, isValidChildProcess, mutableConvarConfigDependencies, setupCustomLocaleFile, stringifyConsoleArgs } from './utils';
+import ConsoleLineEnum from '@modules/Logger/FXServerLogger/ConsoleLineEnum';
+import dict49 from 'nanoid-dictionary/nolookalikes';
+import { customAlphabet } from 'nanoid/non-secure';
+import { spawn } from 'node:child_process';
+import path from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
+import StreamValues from 'stream-json/streamers/StreamValues';
 import ProcessManager, { ChildProcessStateInfo } from './ProcessManager';
 import handleFd3Messages from './handleFd3Messages';
-import ConsoleLineEnum from '@modules/Logger/FXServerLogger/ConsoleLineEnum';
-import { txHostConfig } from '@core/globalData';
-import path from 'node:path';
+import { childProcessEventBlackHole, getFxSpawnVariables, getMutableConvars, getPreStartSpawnVariables, isValidChildProcess, mutableConvarConfigDependencies, setupCustomLocaleFile, stringifyConsoleArgs } from './utils';
 const console = consoleFactory('FxRunner');
 const genMutex = customAlphabet(dict49, 5);
 
@@ -198,6 +198,7 @@ export default class FxRunner {
                 },
             });
         }
+        txCore.discordBot.sendServerActionWebhook('started').catch(() => { });
 
 
         // Run the pre-start flow

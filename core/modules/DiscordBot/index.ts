@@ -1,12 +1,13 @@
 const modulename = 'DiscordBot';
-import Discord, { ActivityType, ChannelType, Client, EmbedBuilder, GatewayIntentBits } from 'discord.js';
-import slashCommands from './slash';
-import interactionCreateHandler from './interactionCreateHandler';
-import { generateStatusMessage } from './commands/status';
 import consoleFactory from '@lib/console';
-import { embedColors } from './discordHelpers';
-import { DiscordBotStatus } from '@shared/enums';
 import { UpdateConfigKeySet } from '@modules/ConfigStore/utils';
+import { DiscordBotStatus } from '@shared/enums';
+import Discord, { ActivityType, ChannelType, Client, EmbedBuilder, GatewayIntentBits } from 'discord.js';
+import got from 'got';
+import { generateStatusMessage } from './commands/status';
+import { embedColors } from './discordHelpers';
+import interactionCreateHandler from './interactionCreateHandler';
+import slashCommands from './slash';
 const console = consoleFactory(modulename);
 
 
@@ -20,6 +21,8 @@ type AnnouncementType = {
     description: string | MessageTranslationType;
     type: keyof typeof embedColors;
 }
+
+type ServerActionStatus = 'starting' | 'started' | 'restarting' | 'stopping';
 
 type SpawnConfig = Pick<
     TxConfigs['discordBot'],
@@ -188,6 +191,35 @@ export default class DiscordBot {
         } catch (error) {
             console.error(`Error sending Discord announcement: ${(error as Error).message}`);
         }
+    }
+
+
+    /**
+     * Send a server action status message to the configured webhooks.
+     */
+    async sendServerActionWebhook(status: ServerActionStatus) {
+        const webhookUrls = [
+            txConfig.discordBot.serverActionWebhook1,
+            txConfig.discordBot.serverActionWebhook2,
+        ].filter((url): url is string => typeof url === 'string' && url.length > 0);
+
+        if (!webhookUrls.length) return false;
+
+        const actionLabels: Record<ServerActionStatus, string> = {
+            starting: ':arrow_forward: is starting',
+            started: ':green_heart: is now online',
+            restarting: ':arrows_counterclockwise: is restarting',
+            stopping: ':octagonal_sign: is stopping',
+        };
+        const serverName = txConfig.general.serverName || 'Server';
+        const content = `<t:${Math.floor(Date.now() / 1000)}:T> [${serverName}] ${actionLabels[status]}`;
+        const payload = {
+            content,
+            allowed_mentions: { parse: [] as string[] },
+        };
+
+        await Promise.allSettled(webhookUrls.map((webhookUrl) => got.post(webhookUrl, { json: payload })));
+        return true;
     }
 
 

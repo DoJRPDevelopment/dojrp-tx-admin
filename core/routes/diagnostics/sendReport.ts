@@ -1,14 +1,14 @@
 const modulename = 'WebServer:SendDiagnosticsReport';
-import got from '@lib/got';
 import { txEnv, txHostConfig } from '@core/globalData';
-import { GenericApiErrorResp } from '@shared/genericApiTypes';
-import * as diagnosticsFuncs from '@lib/diagnostics';
-import { redactApiKeys, redactStartupSecrets } from '@lib/misc';
-import { type ServerDataContentType, type ServerDataConfigsType, getServerDataContent, getServerDataConfigs } from '@lib/fxserver/serverData';
-import MemCache from '@lib/MemCache';
 import consoleFactory, { getLogBuffer } from '@lib/console';
-import { AuthedCtx } from '@modules/WebServer/ctxTypes';
+import * as diagnosticsFuncs from '@lib/diagnostics';
 import scanMonitorFiles from '@lib/fxserver/scanMonitorFiles';
+import { type ServerDataConfigsType, type ServerDataContentType, getServerDataConfigs, getServerDataContent } from '@lib/fxserver/serverData';
+import got from '@lib/got';
+import MemCache from '@lib/MemCache';
+import { redactApiKeys, redactStartupSecrets } from '@lib/misc';
+import { AuthedCtx } from '@modules/WebServer/ctxTypes';
+import { GenericApiErrorResp } from '@shared/genericApiTypes';
 const console = consoleFactory(modulename);
 
 //Consts & Helpers
@@ -65,6 +65,12 @@ export default async function SendDiagnosticsReport(ctx: AuthedCtx) {
     const storedConfigs = txCore.configStore.getStoredConfig() as any;
     if (storedConfigs?.discordBot?.token) {
         storedConfigs.discordBot.token = '[REDACTED]';
+    }
+    if (storedConfigs?.discordBot?.serverActionWebhook1) {
+        storedConfigs.discordBot.serverActionWebhook1 = '[REDACTED]';
+    }
+    if (storedConfigs?.discordBot?.serverActionWebhook2) {
+        storedConfigs.discordBot.serverActionWebhook2 = '[REDACTED]';
     }
     if (storedConfigs?.server?.startupArgs) {
         storedConfigs.server.startupArgs = redactStartupSecrets(storedConfigs.server.startupArgs);
