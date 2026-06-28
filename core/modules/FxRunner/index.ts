@@ -100,6 +100,8 @@ export default class FxRunner {
                 console.verbose.debug('Server booted successfully, resetting spawn backoff delay.');
             }
             this.restartSpawnBackoffDelay = 0;
+
+            txCore.discordBot.sendServerActionWebhook('started').catch(() => { });
         }
         return this.restartSpawnBackoffDelay;
     }
@@ -198,7 +200,6 @@ export default class FxRunner {
                 },
             });
         }
-        txCore.discordBot.sendServerActionWebhook('started').catch(() => { });
 
 
         // Run the pre-start flow
