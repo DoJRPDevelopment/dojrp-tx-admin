@@ -1,13 +1,13 @@
 const modulename = 'WebServer:GetSettingsConfigs';
-import localeMap from '@shared/localeMap';
+import { txHostConfig } from '@core/globalData';
 import consoleFactory from '@lib/console';
+import { redactStartupSecrets } from '@lib/misc';
+import ConfigStore from '@modules/ConfigStore';
+import { ConfigChangelogEntry } from '@modules/ConfigStore/changelog';
+import { PartialTxConfigs, TxConfigs } from '@modules/ConfigStore/schema';
 import { AuthedCtx } from '@modules/WebServer/ctxTypes';
 import { GenericApiErrorResp } from '@shared/genericApiTypes';
-import ConfigStore from '@modules/ConfigStore';
-import { PartialTxConfigs, TxConfigs } from '@modules/ConfigStore/schema';
-import { ConfigChangelogEntry } from '@modules/ConfigStore/changelog';
-import { redactApiKeys, redactStartupSecrets } from '@lib/misc';
-import { txHostConfig } from '@core/globalData';
+import localeMap from '@shared/localeMap';
 const console = consoleFactory(modulename);
 
 
@@ -60,6 +60,12 @@ export default async function GetSettingsConfigs(ctx: AuthedCtx) {
         }
         if(outData.storedConfigs.discordBot?.token) {
             toRedact.discordBot.token = '[redacted by txAdmin]';
+        }
+        if(outData.storedConfigs.discordBot?.serverActionWebhook1) {
+            toRedact.discordBot.serverActionWebhook1 = '[redacted by txAdmin]';
+        }
+        if(outData.storedConfigs.discordBot?.serverActionWebhook2) {
+            toRedact.discordBot.serverActionWebhook2 = '[redacted by txAdmin]';
         }
     }
 

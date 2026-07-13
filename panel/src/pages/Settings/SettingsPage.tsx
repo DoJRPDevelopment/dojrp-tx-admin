@@ -1,7 +1,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { setUrlHash } from "@/lib/navigation";
+import { setUrlHash as setUrlHashOriginal } from "@/lib/navigation";
 import { Settings2Icon } from "lucide-react";
 
 import { ApiTimeout, useBackendApi } from "@/hooks/fetch";
@@ -104,10 +104,23 @@ export default function SettingsPage() {
     const openConfirmDialog = useOpenConfirmDialog();
     const { hasPerm } = useAdminPerms();
 
+    // FIXME:NEXT:UPDATE remove
+    const setUrlHash = (hash: string) => {
+        if (hash === 'whitelist') {
+            hash = 'allowlist';
+        }
+        setUrlHashOriginal(hash);
+    }
+
     //Check for default tab in URL hash
     const [tab, setTab] = useState(() => {
         const pageHash = window.location?.hash.slice(1);
-        return settingsTabs.find(tab => tab.ctx.tabId === pageHash)?.ctx.tabId ?? settingsTabs[0].ctx.tabId;
+
+        // FIXME:NEXT:UPDATE remove
+        const requestedTab = pageHash === 'allowlist' ? 'whitelist' : pageHash;
+        if (pageHash === 'whitelist') setUrlHash('allowlist');
+
+        return settingsTabs.find(tab => tab.ctx.tabId === requestedTab)?.ctx.tabId ?? settingsTabs[0].ctx.tabId;
     });
 
 
@@ -227,7 +240,9 @@ export default function SettingsPage() {
                                 className="hover:text-primary"
                                 disabled={tab.locked}
                             >
-                                {tab.ctx.tabName}
+                                {/* FIXME:NEXT:UPDATE remove */}
+                                {tab.ctx.tabName === 'Whitelist' ? 'Allowlist' : tab.ctx.tabName}
+
                                 {/* <TriangleAlertIcon className="inline-block size-4 mt-0.5 ml-1 text-destructive self-center" /> */}
                                 {/* <DynamicNewBadge size='xs' featName="ignore" /> */}
                             </TabsTrigger>

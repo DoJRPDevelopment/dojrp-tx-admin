@@ -41,7 +41,10 @@ export default class FXServerLogger extends LoggerBase {
      * Returns a string with short usage stats
      */
     getUsageStats() {
-        return `Buffer: ${bytes(this.recentBuffer.length)}, lrErrors: ${this.lrErrors}`;
+        return {
+            buffer: bytes(this.recentBuffer.length)!,
+            lrErrors: this.lrErrors,
+        };
     }
 
 
