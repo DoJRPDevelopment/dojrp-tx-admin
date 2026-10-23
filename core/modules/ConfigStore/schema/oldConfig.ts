@@ -1,10 +1,10 @@
 import { dequal } from 'dequal/lite';
 import parseArgsStringToArgv from "string-argv";
-import { ConfigSchemas_v2 } from "./index";
-import { ListOf } from "./utils";
-import { genBanTemplateId } from "./banlist";
 import { getConfigDefaults } from "../configParser";
 import { confx } from "../utils";
+import { genBanTemplateId } from "./banlist";
+import { ConfigSchemas_v2 } from "./index";
+import { ListOf } from "./utils";
 
 const restructureOldConfig = (old: any) => {
     //Apply the legacy migrations (mutation)
@@ -35,6 +35,8 @@ const restructureOldConfig = (old: any) => {
             token: old?.discordBot?.token,
             guild: old?.discordBot?.guild,
             warningsChannel: old?.discordBot?.announceChannel, //NOTE:renamed
+            serverActionWebhook1: old?.discordBot?.serverActionWebhook1 ?? null,
+            serverActionWebhook2: old?.discordBot?.serverActionWebhook2 ?? null,
             embedJson: old?.discordBot?.embedJson,
             embedConfigJson: old?.discordBot?.embedConfigJson,
         },

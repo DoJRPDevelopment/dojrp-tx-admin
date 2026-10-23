@@ -1,14 +1,14 @@
 const modulename = 'WebServer:SendDiagnosticsReport';
-import got from '@lib/got';
 import { txEnv, txHostConfig } from '@core/globalData';
-import { GenericApiErrorResp } from '@shared/genericApiTypes';
-import * as diagnosticsFuncs from '@lib/diagnostics';
-import { redactApiKeys, redactStartupSecrets } from '@lib/misc';
-import { type ServerDataContentType, type ServerDataConfigsType, getServerDataContent, getServerDataConfigs } from '@lib/fxserver/serverData';
-import MemCache from '@lib/MemCache';
 import consoleFactory, { getLogBuffer } from '@lib/console';
-import { AuthedCtx } from '@modules/WebServer/ctxTypes';
+import * as diagnosticsFuncs from '@lib/diagnostics';
 import scanMonitorFiles from '@lib/fxserver/scanMonitorFiles';
+import { type ServerDataConfigsType, type ServerDataContentType, getServerDataConfigs, getServerDataContent } from '@lib/fxserver/serverData';
+import got from '@lib/got';
+import MemCache from '@lib/MemCache';
+import { redactApiKeys, redactStartupSecrets } from '@lib/misc';
+import { AuthedCtx } from '@modules/WebServer/ctxTypes';
+import { GenericApiErrorResp } from '@shared/genericApiTypes';
 const console = consoleFactory(modulename);
 
 //Consts & Helpers
@@ -35,6 +35,9 @@ export default async function SendDiagnosticsReport(ctx: AuthedCtx) {
     };
     const sendTypedResp = (data: SuccessResp | GenericApiErrorResp) => ctx.send(data);
 
+    //FIXME: re-enable
+    return sendTypedResp({ error: 'The diagnostics report feature is temporarily disabled. Please check back later.' });
+
     //Rate limit (and cache) report submissions
     const cachedReportId = reportIdCache.get();
     if (cachedReportId) {
@@ -46,13 +49,12 @@ export default async function SendDiagnosticsReport(ctx: AuthedCtx) {
     //Diagnostics
     let diagnostics;
     try {
-        const [host, txadmin, fxserver, proccesses] = await Promise.all([
+        const [host, txadmin, proccesses] = await Promise.all([
             diagnosticsFuncs.getHostData(),
-            diagnosticsFuncs.getTxAdminData(),
-            diagnosticsFuncs.getFXServerData(),
+            diagnosticsFuncs.getRuntimeData(),
             diagnosticsFuncs.getProcessesData(),
         ]);
-        diagnostics = { host, txadmin, fxserver, proccesses };
+        diagnostics = { host, txadmin, proccesses };
     } catch (error) { }
 
     //Admins
@@ -63,6 +65,12 @@ export default async function SendDiagnosticsReport(ctx: AuthedCtx) {
     const storedConfigs = txCore.configStore.getStoredConfig() as any;
     if (storedConfigs?.discordBot?.token) {
         storedConfigs.discordBot.token = '[REDACTED]';
+    }
+    if (storedConfigs?.discordBot?.serverActionWebhook1) {
+        storedConfigs.discordBot.serverActionWebhook1 = '[REDACTED]';
+    }
+    if (storedConfigs?.discordBot?.serverActionWebhook2) {
+        storedConfigs.discordBot.serverActionWebhook2 = '[REDACTED]';
     }
     if (storedConfigs?.server?.startupArgs) {
         storedConfigs.server.startupArgs = redactStartupSecrets(storedConfigs.server.startupArgs);

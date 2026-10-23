@@ -1,23 +1,23 @@
 const modulename = 'WebServer:SettingsPage';
 import consoleFactory from '@lib/console';
+import { getFsErrorMdMessage } from '@lib/fs';
+import { resolveCFGFilePath } from '@lib/fxserver/fxsConfigHelper';
+import { findPotentialServerDataPaths, isValidServerDataPath } from '@lib/fxserver/serverData';
+import { SYM_RESET_CONFIG } from '@lib/symbols';
+import ConfigStore from '@modules/ConfigStore';
+import type { PartialTxConfigs, PartialTxConfigsToSave } from '@modules/ConfigStore/schema';
+import { getSchemaChainError } from '@modules/ConfigStore/schema/utils';
+import { confx } from '@modules/ConfigStore/utils';
+import { generateStatusMessage } from '@modules/DiscordBot/commands/status';
+import Translator, { localeFileSchema } from '@modules/Translator';
+import type { AuthedCtx } from '@modules/WebServer/ctxTypes';
+import type { ApiToastResp } from '@shared/genericApiTypes';
+import type { ConfigChangelogEntry } from '@shared/otherTypes';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import slash from 'slash';
-import type { AuthedCtx } from '@modules/WebServer/ctxTypes';
-import type { ApiToastResp } from '@shared/genericApiTypes';
-import type { PartialTxConfigs, PartialTxConfigsToSave } from '@modules/ConfigStore/schema';
-import type { ConfigChangelogEntry } from '@shared/otherTypes';
 import { z } from 'zod';
 import { fromError } from 'zod-validation-error';
-import Translator, { localeFileSchema } from '@modules/Translator';
-import ConfigStore from '@modules/ConfigStore';
-import { resolveCFGFilePath } from '@lib/fxserver/fxsConfigHelper';
-import { findPotentialServerDataPaths, isValidServerDataPath } from '@lib/fxserver/serverData';
-import { getFsErrorMdMessage } from '@lib/fs';
-import { generateStatusMessage } from '@modules/DiscordBot/commands/status';
-import { getSchemaChainError } from '@modules/ConfigStore/schema/utils';
-import { confx } from '@modules/ConfigStore/utils';
-import { SYM_RESET_CONFIG } from '@lib/symbols';
 const console = consoleFactory(modulename);
 
 
@@ -46,6 +46,7 @@ const cardNamesMap = {
     general: 'General',
     fxserver: 'FXServer',
     bans: 'Bans',
+    // FIXME:NEXT:UPDATE rename
     whitelist: 'Whitelist',
     discord: 'Discord',
     'game-menu': 'Game Menu',
@@ -97,6 +98,9 @@ export default async function SaveSettingsConfigs(ctx: AuthedCtx) {
     const { resetKeys, changes: inputConfig } = bodySchemaRes.data;
     const cardName = cardNamesMap[ctx.params.card as keyof typeof cardNamesMap] ?? 'UNKNOWN';
 
+    // FIXME:NEXT:UPDATE remove
+    const displayCardName = cardName === 'Whitelist' ? 'Allowlist' : cardName;
+
     //Delegate to the specific card handlers - if required
     let handlerResp: CardHandlerSuccessResp | void = { processedConfig: inputConfig };
     try {
@@ -111,7 +115,7 @@ export default async function SaveSettingsConfigs(ctx: AuthedCtx) {
         return sendTypedResp({
             type: 'error',
             md: true,
-            title: `Error processing the ${cardName} changes.`,
+            title: `Error processing the ${displayCardName} changes.`,
             msg: (error as any).message,
         });
     }
@@ -129,7 +133,7 @@ export default async function SaveSettingsConfigs(ctx: AuthedCtx) {
         return sendTypedResp({
             type: 'error',
             md: true,
-            title: `Error processing the ${cardName} changes.`,
+            title: `Error processing the ${displayCardName} changes.`,
             msg: (error as any).message,
         });
     }
@@ -142,7 +146,7 @@ export default async function SaveSettingsConfigs(ctx: AuthedCtx) {
         }
         return sendTypedResp({
             type: 'success',
-            msg: `${cardName} Settings saved!`,
+            msg: `${displayCardName} Settings saved!`,
             ...(handlerResp?.successToast ?? {}),
             stored: txCore.configStore.getStoredConfig(),
             changelog: txCore.configStore.getChangelog(),
@@ -152,7 +156,7 @@ export default async function SaveSettingsConfigs(ctx: AuthedCtx) {
         return sendTypedResp({
             type: 'error',
             md: true,
-            title: `Error saving the ${cardName} changes.`,
+            title: `Error saving the ${displayCardName} changes.`,
             msg: (error as any).message,
         });
     }
@@ -329,6 +333,8 @@ const handleDiscordCard: CardHandler = async (inputConfig, sendTypedResp) => {
         [schemas.token, inputConfig.discordBot.token],
         [schemas.guild, inputConfig.discordBot.guild],
         [schemas.warningsChannel, inputConfig.discordBot.warningsChannel],
+        [schemas.serverActionWebhook1, inputConfig.discordBot.serverActionWebhook1],
+        [schemas.serverActionWebhook2, inputConfig.discordBot.serverActionWebhook2],
     ]);
     if (validationError) {
         return sendTypedResp({
@@ -377,11 +383,8 @@ const handleDiscordCard: CardHandler = async (inputConfig, sendTypedResp) => {
             - **Bot is not in the server:** you need to [INVITE THE BOT](${inviteUrl}) to join the server.
             - **Wrong bot:** you may be using the token of another discord bot.`;
         } else if (errorCode === 'DangerousPermission') {
-            extraContext = `You need to remove the permissions listed above to be able to enable this bot.
-            This should be done in the Discord Server role configuration page and not in the Dev Portal.
-            Check every single role that the bot has in the server.
-
-            Please keep in mind that:
+            extraContext = `To enable the bot, you need to remove the permissions listed above, which can be done in the Discord Server role configuration page. Please check every single role that the bot has, including the \`@everyone\` role.
+            **Please keep in mind that:**
             - These permissions are dangerous because if the bot token leaks, an attacker can cause permanent damage to your server.
             - No bot should have more permissions than strictly needed, especially \`Administrator\`.
             - You should never have multiple bots using the same token, create a new one for each bot.`;
@@ -398,8 +401,8 @@ const handleDiscordCard: CardHandler = async (inputConfig, sendTypedResp) => {
         successToast: {
             type: 'success',
             md: true,
-            title: 'FXServer Settings Saved!',
-            msg: `${successMsg}\nIf _(and only if)_ the status embed is not being updated, check the \`System > Console Log\` page to look for embed errors.`,
+            title: 'Discord Bot Settings Saved!',
+            msg: `${successMsg}\nIf _(and only if)_ the status embed is not being updated, check the [System > Console Log](/system/console-log) page to look for embed errors.`,
         }
     };
 }

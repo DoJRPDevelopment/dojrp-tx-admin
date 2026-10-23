@@ -1,12 +1,13 @@
 const modulename = 'DiscordBot';
-import Discord, { ActivityType, ChannelType, Client, EmbedBuilder, GatewayIntentBits } from 'discord.js';
-import slashCommands from './slash';
-import interactionCreateHandler from './interactionCreateHandler';
-import { generateStatusMessage } from './commands/status';
 import consoleFactory from '@lib/console';
-import { embedColors } from './discordHelpers';
-import { DiscordBotStatus } from '@shared/enums';
 import { UpdateConfigKeySet } from '@modules/ConfigStore/utils';
+import { DiscordBotStatus } from '@shared/enums';
+import Discord, { ActivityType, ChannelType, Client, EmbedBuilder, GatewayIntentBits } from 'discord.js';
+import got from 'got';
+import { generateStatusMessage } from './commands/status';
+import { embedColors } from './discordHelpers';
+import interactionCreateHandler from './interactionCreateHandler';
+import slashCommands from './slash';
 const console = consoleFactory(modulename);
 
 
@@ -20,6 +21,8 @@ type AnnouncementType = {
     description: string | MessageTranslationType;
     type: keyof typeof embedColors;
 }
+
+type ServerActionStatus = 'starting' | 'started' | 'restarting' | 'stopping';
 
 type SpawnConfig = Pick<
     TxConfigs['discordBot'],
@@ -192,6 +195,35 @@ export default class DiscordBot {
 
 
     /**
+     * Send a server action status message to the configured webhooks.
+     */
+    async sendServerActionWebhook(status: ServerActionStatus) {
+        const webhookUrls = [
+            txConfig.discordBot.serverActionWebhook1,
+            txConfig.discordBot.serverActionWebhook2,
+        ].filter((url): url is string => typeof url === 'string' && url.length > 0);
+
+        if (!webhookUrls.length) return false;
+
+        const actionLabels: Record<ServerActionStatus, string> = {
+            starting: ':arrow_forward: is starting',
+            started: ':green_heart: is now online',
+            restarting: ':arrows_counterclockwise: is restarting',
+            stopping: ':octagonal_sign: is stopping',
+        };
+        const serverName = txConfig.general.serverName || 'Server';
+        const content = `<t:${Math.floor(Date.now() / 1000)}:T> [${serverName}] ${actionLabels[status]}`;
+        const payload = {
+            content,
+            allowed_mentions: { parse: [] as string[] },
+        };
+
+        await Promise.allSettled(webhookUrls.map((webhookUrl) => got.post(webhookUrl, { json: payload })));
+        return true;
+    }
+
+
+    /**
      * Update persistent status and activity
      */
     async updateBotStatus() {
@@ -339,13 +371,19 @@ export default class DiscordBot {
                     .map((x) => x[0])
                 if (prohibitedPermsInUse.length) {
                     const name = this.#client.user.username;
-                    const perms = prohibitedPermsInUse.includes('Administrator')
-                        ? 'Administrator'
-                        : prohibitedPermsInUse.join(', ');
-                    return sendError(
-                        `This bot (${name}) has dangerous permissions (${perms}) and for your safety the bot has been disabled.`,
-                        { code: 'DangerousPermission' }
-                    );
+                    if(prohibitedPermsInUse.includes('Administrator')) {
+                        return sendError(
+                            `This bot (\`${name}\`) has \`Administrator\` permission and for your safety the bot has been disabled.`,
+                            { code: 'DangerousPermission' }
+                        );
+                    } else {
+                        const permsList = prohibitedPermsInUse.map((x) => `\`${x}\``).join(', ');
+                        const plural = prohibitedPermsInUse.length > 1 ? 'has dangerous permissions' : 'has a dangerous permission';
+                        return sendError(
+                            `This bot (\`${name}\`) ${plural} (${permsList}) and for your safety the bot has been disabled.`,
+                            { code: 'DangerousPermission' }
+                        );
+                    }
                 }
 
                 //Fetching announcements channel

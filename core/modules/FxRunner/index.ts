@@ -1,19 +1,19 @@
-import { spawn } from 'node:child_process';
-import { setTimeout as sleep } from 'node:timers/promises';
-import StreamValues from 'stream-json/streamers/StreamValues';
-import { customAlphabet } from 'nanoid/non-secure';
-import dict49 from 'nanoid-dictionary/nolookalikes';
+import { txHostConfig } from '@core/globalData';
 import consoleFactory from '@lib/console';
 import { resolveCFGFilePath, validateFixServerConfig } from '@lib/fxserver/fxsConfigHelper';
 import { msToShortishDuration } from '@lib/misc';
 import { SYM_SYSTEM_AUTHOR } from '@lib/symbols';
 import { UpdateConfigKeySet } from '@modules/ConfigStore/utils';
-import { childProcessEventBlackHole, getFxSpawnVariables, getMutableConvars, getPreStartSpawnVariables, isValidChildProcess, mutableConvarConfigDependencies, setupCustomLocaleFile, stringifyConsoleArgs } from './utils';
+import ConsoleLineEnum from '@modules/Logger/FXServerLogger/ConsoleLineEnum';
+import dict49 from 'nanoid-dictionary/nolookalikes';
+import { customAlphabet } from 'nanoid/non-secure';
+import { spawn } from 'node:child_process';
+import path from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
+import StreamValues from 'stream-json/streamers/StreamValues';
 import ProcessManager, { ChildProcessStateInfo } from './ProcessManager';
 import handleFd3Messages from './handleFd3Messages';
-import ConsoleLineEnum from '@modules/Logger/FXServerLogger/ConsoleLineEnum';
-import { txHostConfig } from '@core/globalData';
-import path from 'node:path';
+import { childProcessEventBlackHole, getFxSpawnVariables, getMutableConvars, getPreStartSpawnVariables, isValidChildProcess, mutableConvarConfigDependencies, setupCustomLocaleFile, stringifyConsoleArgs } from './utils';
 const console = consoleFactory('FxRunner');
 const genMutex = customAlphabet(dict49, 5);
 
@@ -100,6 +100,8 @@ export default class FxRunner {
                 console.verbose.debug('Server booted successfully, resetting spawn backoff delay.');
             }
             this.restartSpawnBackoffDelay = 0;
+
+            txCore.discordBot.sendServerActionWebhook('started').catch(() => { });
         }
         return this.restartSpawnBackoffDelay;
     }
@@ -434,7 +436,7 @@ export default class FxRunner {
      * Useful for when we change txAdmin settings and want it to reflect on the server.
      * This will also fire the `txAdmin:event:configChanged`
      */
-    private async updateMutableConvars() {
+    public async updateMutableConvars() {
         console.log('Updating FXServer ConVars.');
         try {
             await setupCustomLocaleFile();
@@ -442,11 +444,12 @@ export default class FxRunner {
             for (const [set, convar, value] of convarList) {
                 this.sendCommand(set, [convar, value], SYM_SYSTEM_AUTHOR);
             }
-            return this.sendEvent('configChanged');
+            this.sendEvent('configChanged');
+            return convarList;
         } catch (error) {
             console.verbose.error('Error updating FXServer ConVars');
             console.verbose.dir(error);
-            return false;
+            return null;
         }
     }
 

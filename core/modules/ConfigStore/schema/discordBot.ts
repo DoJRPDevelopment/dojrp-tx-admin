@@ -1,7 +1,7 @@
+import { SYM_FIXER_DEFAULT } from "@lib/symbols";
+import { defaultEmbedConfigJson, defaultEmbedJson } from "@modules/DiscordBot/defaultJsons";
 import { z } from "zod";
 import { discordSnowflakeSchema, typeDefinedConfig, typeNullableConfig } from "./utils";
-import { defaultEmbedConfigJson, defaultEmbedJson } from "@modules/DiscordBot/defaultJsons";
-import { SYM_FIXER_DEFAULT } from "@lib/symbols";
 
 
 const enabled = typeDefinedConfig({
@@ -29,6 +29,20 @@ const warningsChannel = typeNullableConfig({
     name: 'Warnings Channel ID',
     default: null,
     validator: discordSnowflakeSchema.nullable(),
+    fixer: SYM_FIXER_DEFAULT,
+});
+
+const serverActionWebhook1 = typeNullableConfig({
+    name: 'Server Action Webhook 1',
+    default: null,
+    validator: z.string().url().nullable(),
+    fixer: SYM_FIXER_DEFAULT,
+});
+
+const serverActionWebhook2 = typeNullableConfig({
+    name: 'Server Action Webhook 2',
+    default: null,
+    validator: z.string().url().nullable(),
     fixer: SYM_FIXER_DEFAULT,
 });
 
@@ -64,6 +78,8 @@ export default {
     token,
     guild,
     warningsChannel,
+    serverActionWebhook1,
+    serverActionWebhook2,
     embedJson,
     embedConfigJson,
 } as const;
